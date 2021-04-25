@@ -14,7 +14,7 @@ const sizes = {
 //_ Create a scene
 const scene = new THREE.Scene()
 
-//_ Add a points
+//_ Add points
 const particles = new THREE.BufferGeometry()
 const count = 5000
 
@@ -72,6 +72,7 @@ const camera = new THREE.PerspectiveCamera(
 )
 
 camera.position.set(0, -0.5, 2)
+if (sizes.width < 1024) camera.position.z = 4
 if (sizes.width < 400) camera.position.z = 5
 
 scene.add(camera)
