@@ -28,17 +28,19 @@ particles.setAttribute("position", new THREE.BufferAttribute(positions, 3))
 
 //_ Add material
 const particlesMaterial = new THREE.PointsMaterial({
-  size: 0.1,
+  size: 0.05,
+  color: "#43c5df",
 })
 
 // _ Add mesh
-const mesh = new THREE.Points(particles, particlesMaterial)
-scene.add(mesh)
+const particlesMesh = new THREE.Points(particles, particlesMaterial)
+scene.add(particlesMesh)
 
 // _ Add Text
 const fontLoader = new THREE.FontLoader()
 
-const textMaterial = new THREE.MeshNormalMaterial({})
+const textMaterial = new THREE.MeshBasicMaterial({ wireframe: true })
+let text = null
 
 //* Title
 fontLoader.load("/fonts/Saira_Regular.json", (font) => {
@@ -46,9 +48,9 @@ fontLoader.load("/fonts/Saira_Regular.json", (font) => {
     font,
     size: 0.5,
     height: 0.2,
-    curveSegments: 3,
+    curveSegments: 2,
     bevelEnabled: true,
-    bevelThickness: 0.05,
+    bevelThickness: 0.02,
     bevelSize: 0.03,
     bevelOffset: 0,
     bevelSegments: 5,
@@ -56,7 +58,7 @@ fontLoader.load("/fonts/Saira_Regular.json", (font) => {
 
   textGeometry.center()
 
-  const text = new THREE.Mesh(textGeometry, textMaterial)
+  text = new THREE.Mesh(textGeometry, textMaterial)
 
   scene.add(text)
 })
@@ -69,13 +71,17 @@ const camera = new THREE.PerspectiveCamera(
   1000
 )
 
-camera.position.set(1, 1, 1)
+camera.position.set(0, -0.5, 2)
+if (sizes.width < 400) camera.position.z = 5
+
 scene.add(camera)
 
 //_ Add renderer
 const renderer = new THREE.WebGLRenderer({ canvas })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+
+renderer.setClearColor("#151B26", 1)
 
 //_ Add resize events
 window.addEventListener("resize", () => {
@@ -93,17 +99,37 @@ window.addEventListener("resize", () => {
 })
 
 //_ Add controls
-const controls = new OrbitControls(camera, canvas)
-controls.enableDamping = true
+const cursor = {
+  x: 0,
+  y: 0,
+}
 
-//_ Add frame function
+window.addEventListener("mousemove", (event) => {
+  cursor.y = event.clientY / sizes.height - 0.5
+})
+
+window.addEventListener("touchmove", (event) => {
+  cursor.y = event.touches[0].clientY / sizes.height - 0.5
+})
+
 const clock = new THREE.Clock()
 
+//_ Add frame function
 const frame = () => {
-  const elapsedTime = clock.getElapsedTime()
-
   //* Update controls
-  controls.update()
+  camera.position.y = cursor.y
+  camera.position.x = cursor.y * -1
+
+  if (text !== null) camera.lookAt(text.position)
+
+  //* Animate the particles
+  const elapsedTime = clock.getElapsedTime()
+  particlesMesh.position.z = Math.sin(elapsedTime)
+  particlesMesh.position.x = Math.cos(elapsedTime)
+  particlesMesh.position.y = Math.cos(elapsedTime)
+
+  //* Animate the text
+  camera.rotation.z = Math.cos(elapsedTime) / 4
 
   //* Renderer
   renderer.render(scene, camera)
